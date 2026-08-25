@@ -28,7 +28,7 @@ jobs:
       TF_VAR_proxmox_api_url: ${{ secrets.PROXMOX_API_URL }}
       TF_VAR_proxmox_api_token_id: ${{ secrets.PROXMOX_TOKEN_ID }}
       TF_VAR_proxmox_api_token_secret: ${{ secrets.PROXMOX_TOKEN_SECRET }}
-      
+      TF_VAR_proxmox_api_token: ${{ secrets.PROXMOX_API_TOKEN }}
       
       # VM
       TF_VAR_target_node: "pve"
@@ -48,7 +48,7 @@ jobs:
           tags: tag:ci
 
     
-    
+
       - name: Verify RustFS connectivity
         run: |
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://${TF_VAR_rustfs_ip}:${TF_VAR_rustfs_port}")
