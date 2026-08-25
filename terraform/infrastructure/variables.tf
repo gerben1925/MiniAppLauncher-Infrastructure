@@ -2,20 +2,24 @@ variable "vms" {
   type = map(object({
     vmid = number
     name = string
+    mac_address = string
   }))
   description = "Map of VMs to create on Proxmox"
   default = {
     "vm-1" = {
       vmid = 101
-      name = "ubuntu-node-deployment"
+      name = "ubuntu-node-development"
+      mac_address = "02:DB:1F:11:2C:BD"
     }
     "vm-2" = {
       vmid = 102
       name = "ubuntu-node-staging"
+      mac_address = "02:A8:6B:B5:79:4D"
     }
     "vm-3" = {
       vmid = 103
       name = "ubuntu-node-production"
+      mac_address = "02:61:A3:E9:4E:91"
     }
   }
 }

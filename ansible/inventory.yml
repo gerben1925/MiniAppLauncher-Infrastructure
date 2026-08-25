@@ -10,7 +10,7 @@ all:
 
         docker_hosts:
           hosts:
-            ubuntu-node-deployment:
+            ubuntu-node-development:
               ansible_host: 192.168.0.101
             ubuntu-node-staging:
               ansible_host: 192.168.0.102
@@ -19,6 +19,6 @@ all:
 
         database_nodes:
           hosts:
-            ubuntu-node-deployment:
+            ubuntu-node-development:
             ubuntu-node-staging:
             ubuntu-node-production:
