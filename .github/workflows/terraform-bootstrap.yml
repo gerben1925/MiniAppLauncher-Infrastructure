@@ -18,6 +18,9 @@ jobs:
     env:
       TF_VAR_rustfs_ip: ${{ secrets.RUSTFS_IP }}
       TF_VAR_rustfs_port: ${{ secrets.RUSTFS_PORT }}
+      TF_VAR_access_key: ${{ secrets.RUSTFS_ACCESS_KEY }}
+      TF_VAR_secret_key: ${{ secrets.RUSTFS_SECRET_KEY }}
+      TF_VAR_rustfs_bucket: ${{ secrets.RUSTFS_BUCKET }} 
      
 
     steps:
