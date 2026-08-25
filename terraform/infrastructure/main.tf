@@ -41,6 +41,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
 
   network_device {
     bridge = "vmbr0"
+    mac_address = each.value.mac_address
   }
 
 
@@ -62,7 +63,6 @@ resource "proxmox_virtual_environment_vm" "vm" {
     ip_config {
       ipv4 {
         address = "dhcp"
-        mac     = each.value.mac_address
       }
     }
   }
