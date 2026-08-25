@@ -20,7 +20,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 3048
   }
 
 
