@@ -40,7 +40,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
 
 
   network_device {
-    bridge = "vmbr0"
+    bridge      = "vmbr0"
     mac_address = each.value.mac_address
   }
 
