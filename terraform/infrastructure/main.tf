@@ -30,7 +30,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
   disk {
     datastore_id = "local-lvm"
     interface    = "scsi0"
-    size         = 4
+    size         = 20
   }
 
 
