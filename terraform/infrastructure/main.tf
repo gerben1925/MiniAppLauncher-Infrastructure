@@ -10,7 +10,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
   started         = true
   stop_on_destroy = true
 
- 
+
   clone {
     vm_id = 9000
   }
@@ -26,19 +26,19 @@ resource "proxmox_virtual_environment_vm" "vm" {
 
   scsi_hardware = "virtio-scsi-pci"
 
- 
+
   disk {
     datastore_id = "local-lvm"
     interface    = "scsi0"
     size         = 4
   }
 
-  
+
   serial_device {
     device = "socket"
   }
 
-  
+
   network_device {
     bridge = "vmbr0"
   }
