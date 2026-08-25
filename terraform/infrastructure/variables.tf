@@ -7,11 +7,15 @@ variable "vms" {
   default = {
     "vm-1" = {
       vmid = 101
-      name = "ubuntu-node-01"
+      name = "ubuntu-node-deployment"
     }
     "vm-2" = {
       vmid = 102
-      name = "ubuntu-node-02"
+      name = "ubuntu-node-staging"
+    }
+    "vm-3" = {
+      vmid = 103
+      name = "ubuntu-node-production"
     }
   }
 }
