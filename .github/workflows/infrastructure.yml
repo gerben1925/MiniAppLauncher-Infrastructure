@@ -1,0 +1,129 @@
+name: Infrastructure & Database Deployment
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Provision Infrastructure & Setup Docker/Database
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: terraform/infrastructure 
+
+    env:
+      # S3 / RustFS Backend Authentication
+      TF_VAR_rustfs_ip: ${{ secrets.RUSTFS_IP }}
+      TF_VAR_rustfs_port: ${{ secrets.RUSTFS_PORT }}
+      TF_VAR_rustfs_bucket: ${{ secrets.RUSTFS_BUCKET }}
+
+      AWS_ACCESS_KEY_ID: ${{ secrets.RUSTFS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.RUSTFS_SECRET_KEY }}
+
+      # Proxmox Provider Variables
+      TF_VAR_proxmox_api_url: ${{ secrets.PROXMOX_API_URL }}
+      TF_VAR_proxmox_api_token_id: ${{ secrets.PROXMOX_TOKEN_ID }}
+      TF_VAR_proxmox_api_token_secret: ${{ secrets.PROXMOX_TOKEN_SECRET }}
+      
+      
+      # VM
+      TF_VAR_target_node: "pve"
+      TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+   
+
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+    
+    
+      - name: Verify RustFS connectivity
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://${TF_VAR_rustfs_ip}:${TF_VAR_rustfs_port}")
+          echo "RustFS responded with HTTP status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -eq "000" ]; then
+            echo "Failed to connect to RustFS"
+            exit 1
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+
+      - name: Terraform Init
+        run: |
+          cat > backend.hcl <<EOF
+          bucket = "${TF_VAR_rustfs_bucket}"
+          key    = "infrastructure/terraform.tfstate"
+          region = "us-east-1"
+
+          endpoints = {
+            s3 = "http://${TF_VAR_rustfs_ip}:${TF_VAR_rustfs_port}"
+          }
+
+          use_path_style              = true
+          skip_credentials_validation = true
+          skip_region_validation      = true
+          skip_metadata_api_check     = true
+          skip_requesting_account_id  = true
+          EOF
+
+          terraform init -reconfigure -upgrade -backend-config=backend.hcl
+
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+
+
+
+      - name: Set up SSH Private Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+     
+
+      - name: Wait for VM Cloud-Init
+        run: |
+          echo "Waiting 45 seconds for virtual machines to initialize and start SSH..."
+          sleep 45
+
+
+
+      - name: Install Ansible Galaxy Collections
+        run: |
+          ansible-galaxy collection install community.docker
+
+      - name: Run Ansible Playbook
+        env:
+          MSSQL_PASSWORD: ${{ secrets.MSSQL_SA_PASSWORD }}
+        run: |
+          ansible-playbook \
+            -i ../../ansible/inventory.yml \
+            ../../ansible/playbook.yml \
+            --extra-vars "mssql_sa_password=$MSSQL_PASSWORD" \
+            --extra-vars "ansible_ssh_common_args='-o StrictHostKeyChecking=no'"
